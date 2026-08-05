@@ -281,7 +281,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-/�� ── CONFIG DE TABLAS ─────────────────────────────────────────────────
+// ── CONFIG DE TABLAS ─────────────────────────────────────────────────
 const TABLAS = {
 telas: { label:'Telas', porColegio:true, priceLabel:'Precio / Kg-Mt',
 itemLabel:(r)=> `${r.tela}· ${r.color} (${r.proveedor})`, priceField:'precio' },
@@ -331,7 +331,7 @@ colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 setBadge('online', '● CONECTADO');
 } catch (e) {
 sel.innerHTML = '<option value="">Error al cargar</option>';
-setBadge('error', '● SIN CONEXI��N');
+setBadge('error', '● SIN CONEXIÓN');
 }
 }
 function onTablaChange() {
