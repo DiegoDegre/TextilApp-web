@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>TextilApp</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--border:#2a2a38;
+--accent:#6c63ff;--accent2:#a78bfa;--accent-dim:rgba(108,99,255,0.12);
+--text:#f0f0f8;--text2:#9090b0;--text3:#5a5a7a;
+--green:#22d3a0;--green-dim:rgba(34,211,160,0.1);
+--amber:#f59e0b;--amber-dim:rgba(245,158,11,0.1);
+--red:#f87171;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;max-width:480px;margin:0 auto}
+.header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-text{font-size:14px;font-weight:600}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.sync-badge{font-size:10px;padding:3px 9px;border-radius:12px;font-family:var(--mono)}
+.sync-badge.online{color:var(--green);background:var(--green-dim);border:1px solid rgba(34,211,160,0.2)}
+.sync-badge.syncing{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,0.2)}
+.sync-badge.error{color:var(--red);background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2)}
+.nav{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
+.nav-btn{padding:12px 4px;border:none;background:transparent;color:var(--text3);font-size:11px;font-family:var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-bottom:2px solid transparent;transition:all 0.2s}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-btn span{font-size:20px}
+.container{padding:16px}
+.section-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-icon{width:32px;height:32px;border-radius:8px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-title{font-size:14px;font-weight:600}
+.card-desc{font-size:11px;color:var(--text3);margin-top:1px}
+.card-body{padding:16px}
+label{display:block;font-size:10px;color:var(--text2);font-weight:500;margin-bottom:5px;letter-spacing:0.05em;text-transform:uppercase}
+select,input[type=text],input[type=number],input[type=date],textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--font);outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;margin-bottom:12px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a5a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.12)}
+select option{background:var(--surface2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.price-wrap{position:relative}
+.price-wrap .sym{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-family:var(--mono);font-size:13px;pointer-events:none}
+.price-wrap input{padding-left:22px;font-family:var(--mono);margin-bottom:0}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all 0.2s;margin-top:4px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5a52e0}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:transparent;color:var(--text2);border:1px solid var(--border);margin-top:8px}
+.btn-secondary:hover{border-color:var(--border-active,#4a4a6a);color:var(--text)}
+.color-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.color-tag{font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:var(--surface2);transition:all 0.15s}
+.color-tag.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.prov-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.prov-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.impact-box{background:var(--accent-dim);border:1px solid rgba(108,99,255,0.2);border-radius:8px;padding:12px;margin-bottom:12px;display:none}
+.impact-title{font-size:10px;color:var(--accent2);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.impact-item{font-size:12px;color:var(--text2);line-height:1.8}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
+.stat-val{font-family:var(--mono);font-size:20px;font-weight:500}
+.stat-val.g{color:var(--green)}.stat-val.a{color:var(--amber)}
+.stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.hist-row{display:grid;grid-template-columns:1.8fr 1fr 90px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:12px;transition:background 0.15s}
+.hist-row:hover{background:var(--surface2)}
+.hist-row:last-child{border-bottom:none}
+.hist-tela{font-weight:500;font-size:13px}
+.hist-color{color:var(--text2);font-size:11px}
+.hist-precio{font-family:var(--mono);color:var(--green);text-align:right}
+.hist-prev{font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:line-through;text-align:right}
+.hist-fecha{color:var(--text3);font-size:11px;text-align:right}
+.empty-state{padding:32px 16px;text-align:center;color:var(--text3);font-size:13px;line-height:1.7}
+.pv-page{background:#fff;color:#222;border-radius:14px;padding:24px;font-family:var(--font);margin-bottom:14px}
+.pv-head{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #6c63ff}
+.pv-emp{font-size:12px;color:#555;line-height:1.7}
+.pv-emp strong{font-size:15px;color:#111;display:block;margin-bottom:3px}
+.pv-num-box{text-align:right}
+.pv-num-big{font-size:24px;font-weight:700;color:#6c63ff;font-family:var(--mono)}
+.pv-fecha{font-size:11px;color:#888;margin-top:3px}
+.pv-valid{font-size:10px;color:#f59e0b;background:#fef3c7;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px}
+.pv-cli{background:#f8f7ff;border:1px solid #e5e3ff;border-radius:8px;padding:12px;margin-bottom:16px}
+.pv-cli-title{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#6c63ff;font-weight:700;margin-bottom:6px}
+.pv-cli-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:11px;color:#444}
+.pv-cli-grid span:nth-child(odd){color:#999}
+.pv-tbl{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px}
+.pv-tbl th{background:#6c63ff;color:#fff;padding:7px 8px;text-align:left;font-size:10px;letter-spacing:0.04em}
+.pv-tbl th:nth-child(n+2){text-align:right}
+.pv-tbl td{padding:7px 8px;border-bottom:1px solid #eee;color:#333}
+.pv-tbl td:nth-child(n+2){text-align:right;font-family:var(--mono)}
+.pv-tbl tr:nth-child(even) td{background:#fafafa}
+.pv-tots{display:flex;justify-content:flex-end}
+.pv-tots-box{width:200px}
+.pv-tot-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:#555}
+.pv-tot-row.grand{border-top:2px solid #6c63ff;margin-top:6px;padding-top:8px;font-weight:700;font-size:13px;color:#222}
+.pv-tot-row .val{font-family:var(--mono)}
+.pv-tot-row.grand .val{color:#6c63ff}
+.pv-firmas{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #eee}
+.pv-firma{text-align:center;font-size:10px;color:#aaa}
+.pv-firma-line{height:1px;background:#ddd;margin-bottom:5px}
+.items-wrap{margin-bottom:12px}
+.item-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative}
+.item-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.item-del:hover{color:var(--red)}
+.item-grid{display:grid;grid-template-columns:1fr 60px 80px;gap:8px;align-items:end}
+.item-grid input{margin-bottom:0}
+.item-total{font-family:var(--mono);font-size:12px;color:var(--green);text-align:right;padding-top:4px}
+tots-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.tot-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--text2)}
+.tot-row.grand{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;font-size:15px;font-weight:600;color:var(--text)}
+.tot-row .v{font-family:var(--mono)}
+.tot-row.grand .v{color:var(--green)}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;background:transparent;border:1px dashed var(--border);color:var(--text3);font-size:12px;font-family:var(--font);border-radius:8px;cursor:pointer;transition:all 0.2s;margin-bottom:12px}
+.add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#000;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.panel{display:none}.panel.active{display:block}
+.item-pick{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center}
+.item-pick:hover{border-color:var(--accent)}
+.item-pick.active{border-color:var(--accent);background:var(--accent-dim)}
+.item-pick-name{font-size:12px;color:var(--text)}
+.item-pick-price{font-family:var(--mono);font-size:12px;color:var(--text2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.25s ease forwards}
+@media print{.header,.nav,.btn,.add-btn,.item-del{display:none!important}.pv-page{border-radius:0;padding:16px;color:#222!important}}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="logo">
+<div class="logo-mark">🧵</div>
+<div>
+<div class="logo-text">TextilApp</div>
+<div class="logo-sub">Ego Mentali by PITUCOS</div>
+</div>
+</div>
+<div class="sync-badge online" id="sync-badge">● CONECTADO</div>
+</div>
+<div class="nav">
+<button class="nav-btn active" onclick="showPanel('precios',this)"><span>💰</span>Precios</button>
+<button class="nav-btn" onclick="showPanel('presupuesto',this)"><span>📄</span>Presupuesto</button>
+<button class="nav-btn" onclick="showPanel('historial',this)"><span>📊</span>Historial</button>
+</div>
+<!-- PANEL: PRECIOS -->
+<div class="panel active" id="panel-precios">
+<div class="container">
+<div class="stats-row">
+<div class="stat"><div class="stat-val" id="st-tipos">-</div><div class="stat-lbl">Ítems</div></div>
+<div class="stat"><div class="stat-val g" id="st-hoy">0</div><div class="stat-lbl">Hoy</div></div>
+<div class="stat"><div class="stat-val a" id="st-pend">-</div><div class="stat-lbl">Pendientes</div></div>
+</div>
+<div class="section-label">Actualizar precio</div>
+<div class="card">
+<div class="card-header">
+<div class="card-icon">💰</div>
+<div><div class="card-title">Tablas maestras</div><div class="card-desc">Elegí la tabla, el colegio y el ítem</div></div>
+</div>
+<div class="card-body">
+<label>Tabla</label>
+<select id="sel-tabla" onchange="onTablaChange()">
+<option value="telas">Telas (por Kg/Mt)</option>
+<option value="confeccion">Confección</option>
+<option value="bordado">Bordado / Estampado</option>
+<option value="servicios">Servicios generales</option>
+</select>
+<div id="colegio-sec">
+<label>Colegio</label>
+<select id="sel-colegio" onchange="onColegioChange()">
+<option value="">— Cargando colegios —</option>
+</select>
+</div>
+<div id="items-sec" style="display:none">
+<label id="items-label">Ítem</label>
+<div id="items-list"></div>
+</div>
+<div id="precio-sec" style="display:none">
+<div class="field-row">
+<div>
+<label id="lbl-precio-actual">Precio actual</label>
+<div class="price-wrap"><span class="sym">$</span>
+<input type="number" id="precio-actual" readonly style="color:var(--text3)">
+</div>
+</div>
+<div>
+<label>Nuevo precio</label>
+<div class="price-wrap"><span class="sym">$</span>
+<input type="number" id="precio-nuevo" placeholder="0" oninput="calcImpacto()">
+</div>
+</div>
+</div>
+<div class="impact-box" id="impact-box">
+<div class="impact-title">⚡ Cambio</div>
+<div id="impact-content" class="impact-item"></div>
+</div>
+<button class="btn btn-primary" id="btn-guardar" onclick="guardarPrecio()">💾 Guardar en Google Sheets</button>
+<button class="btn btn-secondary" onclick="resetSeleccion()">Cancelar</button>
+</div>
+</div>
+</div>
+</div>
+<!-- PANEL: PRESUPUESTO -->
+<div class="panel" id="panel-presupuesto">
+<div class="container" id="pres-form-view">
+<div class="section-label">Nuevo presupuesto</div>
+<div style="font-family:var(--mono);font-size:11px;color:var(--accent2);background:var(--accent-dim);border:1px solid rgba(108,99,255,0.2);border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">Presupuesto Nº <span id="pres-num">0409</span></div>
+<div class="card">
+<div class="card-header"><div class="card-icon">👤</div><div><div class="card-title">Datos del cliente</div></div></div>
+<div class="card-body">
+<label>Institución / Cliente</label>
+<input type="text" id="cli-nombre" placeholder="Ej: Colegio San Martín">
+<div class="field-row">
+<div><label>CUIT</label><input type="text" id="cli-cuit" placeholder="XX-XXXXXXXX-X"></div>
+<div><label>Teléfono</label><input type="text" id="cli-tel" placeholder="11-XXXX-XXXX"></div>
+</div>
+<label>E-mail</label>
+<input type="text" id="cli-email" placeholder="contacto@cliente.com">
+<div class="field-row">
+<div><label>Fecha</label><input type="date" id="pres-fecha"></div>
+<div><label>Validez</label>
+<select id="pres-validez">
+<option>7 días</option><option>15 días</option><option>30 días</option><option>A convenir</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><div class="card-icon">📦</div><div><div class="card-title">Ítems</div><div class="card-desc">Cargá cada prenda con talle y precio</div></div></div>
+<div class="card-body">
+<label>Agregar del catálogo</label>
+<select id="quick-sel" onchange="quickAdd()">
+<option value="">— Agregar prenda rápida —</option>
+<option value="CHOMBA PIQUÉ CON LOGO|27000">Chomba Piqué con Logo</option>
+<option value="CHOMBA PIQUÉ SIN LOGO|23000">Chomba Piqué sin Logo</option>
+<option value="BUZO DEPORTIVO FRISADO CON LOGO|35000">Buzo Deportivo Frisado con Logo</option>
+<option value="CAMPERA DEPORTIVA FRISADA CON LOGO|47000">Campera Deportiva Frisada con Logo</option>
+<option value="PANTALON LARGO DEPORTIVO FRISADO CON LOGO|37000">Pantalón Deportivo Frisado con Logo</option>
+<option value="REMERA PIQUÉ CON LOGO|20000">Remera Piqué con Logo</option>
+<option value="REMERA ML PIQUÉ CON LOGO|22000">Remera ML Piqué con Logo</option>
+<option value="POLLERA DEPORTIVA CON LOGO|20000">Pollera Deportiva con Logo</option>
+<option value="SHORT DEPORTIVO CON LOGO|18000">Short Deportivo con Logo</option>
+<option value="BERMUDA DEPORTIVA CON LOGO|22000">Bermuda Deportiva con Logo</option>
+</select>
+<div class="items-wrap" id="items-wrap"></div>
+<button class="add-btn" onclick="addItem()">＋ Agregar ítem manual</button>
+<div class="tots-box">
+<div class="tot-row"><span>Subtotal</span><span class="v" id="tot-sub">$0</span></div>
+<div class="tot-row"><span>IVA</span><span class="v">$0</span></div>
+<div class="tot-row grand"><span>TOTAL</span><span class="v" id="tot-grand">$0</span></div>
+</div>
+<button class="btn btn-primary" onclick="verPreview()">👁 Ver presupuesto</button>
+</div>
+</div>
+</div>
+<!-- PREVIEW PDF -->
+<div class="container" id="pres-preview-view" style="display:none">
+<div class="pv-page" id="pv-page"></div>
+<button class="btn btn-primary" onclick="window.print()">🖨 Guardar como PDF</button>
+<button class="btn btn-secondary" onclick="volverForm()">← Editar</button>
+</div>
+</div>
+<!-- PANEL: HISTORIAL -->
+<div class="panel" id="panel-historial">
+<div class="container">
+<div class="section-label">Historial de cambios</div>
+<div class="card" style="overflow:hidden">
+<div id="hist-container">
+<div class="empty-state">Sin actualizaciones registradas.<br><span style="font-size:11px">Los cambios se guardan automáticamente acá.</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="config.js"></script>
+<script>
+/�� ── CONFIG DE TABLAS ─────────────────────────────────────────────────
+const TABLAS = {
+telas: { label:'Telas', porColegio:true, priceLabel:'Precio / Kg-Mt',
+itemLabel:(r)=> `${r.tela}· ${r.color} (${r.proveedor})`, priceField:'precio' },
+confeccion: { label:'Confección', porColegio:true, priceLabel:'Tarifa de confección',
+itemLabel:(r)=> r.articulo, priceField:'tarifa' },
+bordado: { label:'Bordado / Estampado', porColegio:true, priceLabel:'Precio',
+itemLabel:(r)=> `${r.articulo} (${r.tecnica})`, priceField:'precio' },
+servicios: { label:'Servicios generales', porColegio:false, priceLabel:'Tarifa',
+itemLabel:(r)=> r.servicio, priceField:'tarifa',
+// Solo estos servicios generales son editables desde la app
+soloEstos:['Corte','Viatico','Cierre 75/80','Cierre corto','Abrojo','Ojal','Boton','Packaging'] }
+};
+// ── ESTADO ──────────────────────────────────────────────────────────
+let itemsActuales = [];
+let itemSeleccionado = null;
+let historial = [], updatedCount = 0;
+let itemCount = 0;
+// ── API (Apps Script) ───────────────────────────────────────────────
+async function apiGet(params) {
+const url = `${APP_CONFIG.apiUrl}?${new URLSearchParams(params).toString()}`;
+const res = await fetch(url);
+return res.json();
+}
+async function apiPost(body) {
+// text/plain evita el preflight CORS que Apps Script no maneja
+const res = await fetch(APP_CONFIG.apiUrl, {
+method: 'POST',
+headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+body: JSON.stringify({ ...body, token: APP_CONFIG.token })
+});
+return res.json();
+}
+// ── NAV ──────────────────────────────────────────────────────────
+function showPanel(id, btn) {
+document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById('panel-'+id).classList.add('active');
+btn.classList.add('active');
+}
+// ── PRECIOS: carga inicial ────────────────────────────────────────────
+async function cargarColegios() {
+const sel = document.getElementById('sel-colegio');
+try {
+const colegios = await apiGet({ action: 'colegios' });
+sel.innerHTML = '<option value="">— Seleccioná —</option>' +
+colegios.map(c => `<option value="${c}">${c}</option>`).join('');
+setBadge('online', '● CONECTADO');
+} catch (e) {
+sel.innerHTML = '<option value="">Error al cargar</option>';
+setBadge('error', '● SIN CONEXI��N');
+}
+}
+function onTablaChange() {
+const tabla = document.getElementById('sel-tabla').value;
+const cfg = TABLAS[tabla];
+document.getElementById('colegio-sec').style.display = cfg.porColegio ? 'block' : 'none';
+document.getElementById('items-sec').style.display = 'none';
+document.getElementById('precio-sec').style.display = 'none';
+document.getElementById('impact-box').style.display = 'none';
+itemSeleccionado = null;
+if (!cfg.porColegio) {
+cargarItems(tabla, null);
+}
+}
+function onColegioChange() {
+const tabla = document.getElementById('sel-tabla').value;
+const colegio = document.getElementById('sel-colegio').value;
+document.getElementById('items-sec').style.display = 'none';
+document.getElementById('precio-sec').style.display = 'none';
+if (colegio) cargarItems(tabla, colegio);
+}
+async function cargarItems(tabla, colegio) {
+const cfg = TABLAS[tabla];
+const itemsSec = document.getElementById('items-sec');
+const list = document.getElementById('items-list');
+document.getElementById('items-label').textContent = cfg.label;
+list.innerHTML = '<div class="empty-state">Cargando…</div>';
+itemsSec.style.display = 'block';
+try {
+const params = { action: tabla };
+if (colegio) params.colegio = colegio;
+let rows = await apiGet(params);
+if (cfg.soloEstos) {
+rows = rows.filter(r => cfg.soloEstos.includes(r.servicio));
+}
+itemsActuales = rows;
+document.getElementById('st-tipos').textContent = rows.length;
+document.getElementById('st-pend').textContent = rows.length;
+if (!rows.length) {
+list.innerHTML = '<div class="empty-state">Sin ítems para esta selección.</div>';
+return;
+}
+list.innerHTML = rows.map((r, i) => `
+<div class="item-pick" onclick="seleccionarItem(${i})" id="pick-${i}">
+<span class="item-pick-name">${cfg.itemLabel(r)}</span>
+<span class="item-pick-price">$${Number(r[cfg.priceField]||0).toLocaleString('es-AR')}</span>
+</div>`).join('');
+} catch (e) {
+list.innerHTML = '<div class="empty-state">Error al cargar. Revisá la conexión.</div>';
+setBadge('error', '● ERROR');
+}
+}
+function seleccionarItem(i) {
+const tabla = document.getElementById('sel-tabla').value;
+const cfg = TABLAS[tabla];
+itemSeleccionado = itemsActuales[i];
+document.querySelectorAll('.item-pick').forEach(el=>el.classList.remove('active'));
+document.getElementById('pick-'+i).classList.add('active');
+document.getElementById('lbl-precio-actual').textContent = cfg.priceLabel + ' actual';
+document.getElementById('precio-actual').value = itemSeleccionado[cfg.priceField] || 0;
+document.getElementById('precio-nuevo').value = '';
+document.getElementById('impact-box').style.display = 'none';
+document.getElementById('precio-sec').style.display = 'block';
+}
+function calcImpacto() {
+const nuevo = parseFloat(document.getElementById('precio-nuevo').value) || 0;
+const actual = parseFloat(document.getElementById('precio-actual').value) || 0;
+const box = document.getElementById('impact-box');
+if (!nuevo || !itemSeleccionado) { box.style.display='none'; return; }
+const diff = nuevo - actual;
+const pct = actual > 0 ? ((diff/actual)*100).toFixed(1) : '—';
+const sign = diff >= 0 ? '+' : '';
+const color = diff >= 0 ? 'var(--amber)' : 'var(--green)';
+box.style.display = 'block';
+document.getElementById('impact-content').innerHTML =
+`📈 <span style="color:${color};font-weight:600">${sign}$${Math.abs(diff).toLocaleString('es-AR')} (${sign}${pct}%)</span>`;
+}
+async function guardarPrecio() {
+const tabla = document.getElementById('sel-tabla').value;
+const cfg = TABLAS[tabla];
+const nuevo = parseFloat(document.getElementById('precio-nuevo').value);
+const actual = parseFloat(document.getElementById('precio-actual').value) || 0;
+if (!itemSeleccionado || !nuevo) { showToast('Completá todos los campos', false); return; }
+const btn = document.getElementById('btn-guardar');
+btn.disabled = true; btn.textContent = '⏳ Guardando en Sheets...';
+setBadge('syncing', '● SINCRONIZANDO');
+try {
+const resp = await apiPost({ sheet: tabla, row: itemSeleccionado.row, value: nuevo });
+if (resp.error) throw new Error(resp.error);
+itemSeleccionado[cfg.priceField] = nuevo;
+historial.unshift({ nombre: cfg.itemLabel(itemSeleccionado), tabla: cfg.label, nuevo, actual, fecha: new Date() });
+updatedCount++;
+document.getElementById('st-hoy').textContent = updatedCount;
+renderHistorial();
+setBadge('online', '● CONECTADO');
+showToast(`✓ ${cfg.itemLabel(itemSeleccionado)} → $${nuevo.toLocaleString('es-AR')}`);
+resetSeleccion();
+const colegio = document.getElementById('sel-colegio').value;
+cargarItems(tabla, cfg.porColegio ? colegio : null);
+} catch (err) {
+setBadge('error', '● ERROR');
+showToast('Error al guardar: ' + err.message, false);
+console.error(err);
+} finally {
+btn.disabled = false; btn.textContent = '💾 Guardar en Google Sheets';
+}
+}
+function resetSeleccion() {
+document.getElementById('precio-sec').style.display = 'none';
+document.getElementById('impact-box').style.display = 'none';
+document.querySelectorAll('.item-pick').forEach(el=>el.classList.remove('active'));
+itemSeleccionado = null;
+}
+// ── HISTORIAL ──────────────────────────────────────────────────
+function renderHistorial() {
+const cont = document.getElementById('hist-container');
+if (!historial.length) {
+cont.innerHTML = '<div class="empty-state">Sin actualizaciones aún.</div>'; return;
+}
+cont.innerHTML = historial.map(h => `
+<div class="hist-row fade-up">
+<div><div class="hist-tela">${h.nombre}</div><div class="hist-color">${h.tabla}</div></div>
+<div><div class="hist-precio">$${h.nuevo.toLocaleString('es-AR')}</div><div class="hist-prev">$${h.actual.toLocaleString('es-AR')}</div></div>
+<div class="hist-fecha">${h.fecha.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})}</div>
+</div>`).join('');
+}
+// ── PRESUPUESTO ────────────────────────────────────────────────────────
+document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0];
+function quickAdd() {
+const sel = document.getElementById('quick-sel');
+if (!sel.value) return;
+const [desc, precio] = sel.value.split('|');
+addItem(desc, '', 1, parseInt(precio));
+sel.value = '';
+}
+function addItem(desc='', talle='', cant=1, precio=0) {
+itemCount++;
+const id = 'it' + itemCount;
+const wrap = document.getElementById('items-wrap');
+const div = document.createElement('div');
+div.className = 'item-row fade-up'; div.id = id;
+div.innerHTML = `
+<button class="item-del" onclick="delItem('${id}')">×</button>
+<label>Descripción</label>
+<input type="text" value="${desc}" placeholder="Prenda y detalle" oninput="calcTots()" style="margin-bottom:8px">
+<div class="item-grid">
+<div><label>Talle</label><input type="text" value="${talle}" placeholder="S/M/L..."></div>
+<div><label>Cant.</label><input type="number" value="${cant}" min="1" oninput="calcTots()"></div>
+<div><label>Precio</label><input type="number" value="${precio}" min="0" oninput="calcTots()" style="font-family:var(--mono)"></div>
+</div>
+<div class="item-total" id="${id}-tot">Total: $${(cant*precio).toLocaleString('es-AR')}</div>`;
+wrap.appendChild(div);
+calcTots();
+}
+function delItem(id) {
+document.getElementById(id)?.remove();
+calcTots();
+}
+function calcTots() {
+let sub = 0;
+document.querySelectorAll('#items-wrap .item-row').forEach(row => {
+const nums = row.querySelectorAll('input[type=number]');
+if (nums.length >= 2) {
+const cant = parseFloat(nums[0].value) || 0;
+const precio = parseFloat(nums[1].value) || 0;
+const tot = cant * precio;
+const td = row.querySelector('.item-total');
+if (td) td.textContent = 'Total: $' + tot.toLocaleString('es-AR');
+sub += tot;
+}
+});
+document.getElementById('tot-sub').textContent = '$' + sub.toLocaleString('es-AR');
+document.getElementById('tot-grand').textContent = '$' + sub.toLocaleString('es-AR');
+return sub;
+}
+function verPreview() {
+const rows = document.querySelectorAll('#items-wrap .item-row');
+if (!rows.length) { showToast('Agreá al menos un ítem', false); return; }
+const num = document.getElementById('pres-num').textContent;
+const cliNombre = document.getElementById('cli-nombre').value || '—';
+const cliCuit = document.getElementById('cli-cuit').value || '—';
+const cliTel = document.getElementById('cli-tel').value || '—';
+const cliEmail = document.getElementById('cli-email').value || '—';
+const fechaRaw = document.getElementById('pres-fecha').value;
+const fecha = fechaRaw ? new Date(fechaRaw+'T12:00:00').toLocaleDateString('es-AR',{day:"2-digit",month:"long",year:"numeric"}) : '—';
+const validez = document.getElementById('pres-validez').value;
+const sub = calcTots();
+let filas = '';
+rows.forEach(row => {
+const txt = row.querySelectorAll('input[type=text]');
+const nums = row.querySelectorAll('input[type=number]');
+const desc = txt[0]?.value||'';
+const talle = txt[1]?.value||'';
+const cant = nums[0]?.value||'0';
+const precio = parseInt(nums[1]?.value)||0;
+const tot = (parseInt(cant)||0)*precio;
+filas += `<tr><td>${desc}</td><td>${talle}</td><td>${cant}</td><td>$${precio.toLocaleString('es-AR')}</td><td>$${tot.toLocaleString('es-AR')}</td></tr>`;
+});
+document.getElementById('pv-page').innerHTML = `
+<div class="pv-head">
+<div class="pv-emp"><strong>Ego Mentali by PITUCOS</strong>Av Mitre 541 (Galería El Sol - Local 26) - Avellaneda<br>CUIT-NIF: 23-17391839-9<br>Teléfono: 11-7624-2172<br>E-mail: facturacion@egomentali.com.ar</div>
+<div class="pv-num-box"><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px">Presupuesto</div><div class="pv-num-big">Nº ${num}</div><div class="pv-fecha">Fecha: ${fecha}</div><div class="pv-valid">⏱ Validez: ${validez}</div></div>
+</div>
+<div class="pv-cli">
+<div class="pv-cli-title">Datos del cliente</div>
+<div class="pv-cli-grid"><span>Nombre:</span><span>${cliNombre}</span><span>CUIT-NIF:</span><span>${cliCuit}</span><span>Teléfono:</span><span>${cliTel}</span><span>E-mail:</span><span>${cliEmail}</span></div>
+</div>
+<table class="pv-tbl"><thead><tr><th>Descripción</th><th>Talle</th><th>Unido?es</th><th>Precio</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table>
+<div class="pv-tots"><div class="pv-tots-box">
+<div class="pv-tot-row"><span>Sub-Total</span><span class="val">$${sub.toLocaleString('es-AR')}</span></div>
+<div class="pv-tot-row"><span>IVA</span><span class="val">$0</span></div>
+<div class="pv-tot-row grand"><span>TOTAL PRESUPUESTADO</span><span class="val">$${sub.toLocaleString('es-AR')}</span></div>
+</div></div>
+<div style="font-size:10px;color:#aaa;text-align:center;margin-top:12px;font-style:italic">PRECIOS SIN IVA</div>
+<div class="pv-firmas">
+<div class="pv-firma"><div class="pv-firma-line"></div>Firma de quien confecciona el presupuesto</div>
+<div class="pv-firma"><div class="pv-firma-line"></div>Firma de aceptación del cliente</div>
+</div>`;
+document.getElementById('pres-form-view').style.display = 'none';
+document.getElementById('pres-preview-view').style.display = 'block';
+const next = (parseInt(num)+1).toString().padStart(4,'0');
+document.getElementById('pres-num').textContent = next;
+}
+function volverForm() {
+document.getElementById('pres-form-view').style.display = 'block';
+document.getElementById('pres-preview-view').style.display = 'none';
+}
+// ── UTILS ──────────────────────────────────────────────────
+function setBadge(type, txt) {
+const b = document.getElementById('sync-badge');
+b.className = 'sync-badge ' + type;
+b.textContent = txt;
+}
+function showToast(msg, ok=true) {
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.style.background = ok ? 'var(--green)' : 'var(--red)';
+t.style.color = ok ? '#000' : '#fff';
+t.classList.add('show');
+setTimeout(() => t.classList.remove('show'), 3500);
+}
+// Init
+cargarColegios();
+</script>
+</body>
+</html>
