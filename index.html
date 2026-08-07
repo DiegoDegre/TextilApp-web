@@ -83,6 +83,7 @@ select option{background:var(--surface2)}
 .pv-head{display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #6c63ff}
 .pv-emp{font-size:12px;color:#555;line-height:1.7}
 .pv-emp strong{font-size:15px;color:#111;display:block;margin-bottom:3px}
+.pv-logo{height:40px;margin-bottom:8px;display:block}
 .pv-num-box{text-align:right}
 .pv-num-big{font-size:24px;font-weight:700;color:#6c63ff;font-family:var(--mono)}
 .pv-fecha{font-size:11px;color:#888;margin-top:3px}
@@ -112,7 +113,10 @@ select option{background:var(--surface2)}
 .item-del:hover{color:var(--red)}
 .item-grid{display:grid;grid-template-columns:1fr 60px 80px;gap:8px;align-items:end}
 .item-grid input{margin-bottom:0}
-.item-total{font-family:var(--mono);font-size:12px;color:var(--green);text-align:right;padding-top:4px}
+.item-total{font-family:var(--mono);font-size:12px;color:var(--green);text-align:right;padding-top:4px;display:flex;justify-content:space-between;align-items:center}
+.item-savecat{background:transparent;border:1px solid var(--border);color:var(--text3);font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:var(--font)}
+.item-savecat:hover{border-color:var(--accent);color:var(--accent)}
+.item-savecat:disabled{opacity:0.5;cursor:default}
 tots-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .tot-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--text2)}
 .tot-row.grand{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;font-size:15px;font-weight:600;color:var(--text)}
@@ -130,7 +134,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 .item-pick-price{font-family:var(--mono);font-size:12px;color:var(--text2)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{animation:fadeUp 0.25s ease forwards}
-@media print{.header,.nav,.btn,.add-btn,.item-del{display:none!important}.pv-page{border-radius:0;padding:16px;color:#222!important}}
+@media print{.header,.nav,.btn,.add-btn,.item-del,.item-savecat{display:none!important}.pv-page{border-radius:0;padding:16px;color:#222!important}}
 </style>
 </head>
 <body>
@@ -210,7 +214,23 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <div class="panel" id="panel-presupuesto">
 <div class="container" id="pres-form-view">
 <div class="section-label">Nuevo presupuesto</div>
-<div style="font-family:var(--mono);font-size:11px;color:var(--accent2);background:var(--accent-dim);border:1px solid rgba(108,99,255,0.2);border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">Presupuesto Nº <span id="pres-num">0409</span></div>
+<div style="font-family:var(--mono);font-size:11px;color:var(--accent2);background:var(--accent-dim);border:1px solid rgba(108,99,255,0.2);border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">Presupuesto Nº <span id="pres-num">····</span></div>
+<div class="card">
+<div class="card-header"><div class="card-icon">🏷️</div><div><div class="card-title">Marca</div><div class="card-desc">Elegí para qué marca es este presupuesto</div></div></div>
+<div class="card-body">
+<label>Marca</label>
+<select id="pres-marca">
+<option value="egomentali">Ego Mentali by PITUCOS</option>
+<option value="pitucos">Pitucos Uniformes</option>
+<option value="destrier">Destrier of Battle</option>
+</select>
+<label>IVA</label>
+<select id="pres-iva" onchange="calcTots()">
+<option value="no">Sin IVA</option>
+<option value="si">Con IVA (21%)</option>
+</select>
+</div>
+</div>
 <div class="card">
 <div class="card-header"><div class="card-icon">👤</div><div><div class="card-title">Datos del cliente</div></div></div>
 <div class="card-body">
@@ -238,22 +258,12 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <label>Agregar del catálogo</label>
 <select id="quick-sel" onchange="quickAdd()">
 <option value="">— Agregar prenda rápida —</option>
-<option value="CHOMBA PIQUÉ CON LOGO|27000">Chomba Piqué con Logo</option>
-<option value="CHOMBA PIQUÉ SIN LOGO|23000">Chomba Piqué sin Logo</option>
-<option value="BUZO DEPORTIVO FRISADO CON LOGO|35000">Buzo Deportivo Frisado con Logo</option>
-<option value="CAMPERA DEPORTIVA FRISADA CON LOGO|47000">Campera Deportiva Frisada con Logo</option>
-<option value="PANTALON LARGO DEPORTIVO FRISADO CON LOGO|37000">Pantalón Deportivo Frisado con Logo</option>
-<option value="REMERA PIQUÉ CON LOGO|20000">Remera Piqué con Logo</option>
-<option value="REMERA ML PIQUÉ CON LOGO|22000">Remera ML Piqué con Logo</option>
-<option value="POLLERA DEPORTIVA CON LOGO|20000">Pollera Deportiva con Logo</option>
-<option value="SHORT DEPORTIVO CON LOGO|18000">Short Deportivo con Logo</option>
-<option value="BERMUDA DEPORTIVA CON LOGO|22000">Bermuda Deportiva con Logo</option>
 </select>
 <div class="items-wrap" id="items-wrap"></div>
 <button class="add-btn" onclick="addItem()">＋ Agregar ítem manual</button>
 <div class="tots-box">
 <div class="tot-row"><span>Subtotal</span><span class="v" id="tot-sub">$0</span></div>
-<div class="tot-row"><span>IVA</span><span class="v">$0</span></div>
+<div class="tot-row"><span>IVA</span><span class="v" id="tot-iva">$0</span></div>
 <div class="tot-row grand"><span>TOTAL</span><span class="v" id="tot-grand">$0</span></div>
 </div>
 <button class="btn btn-primary" onclick="verPreview()">👁 Ver presupuesto</button>
@@ -263,7 +273,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <!-- PREVIEW PDF -->
 <div class="container" id="pres-preview-view" style="display:none">
 <div class="pv-page" id="pv-page"></div>
-<button class="btn btn-primary" onclick="window.print()">🖨 Guardar como PDF</button>
+<button class="btn btn-primary" onclick="guardarPDF()">🖨 Guardar como PDF</button>
 <button class="btn btn-secondary" onclick="volverForm()">← Editar</button>
 </div>
 </div>
@@ -294,11 +304,19 @@ itemLabel:(r)=> r.servicio, priceField:'tarifa',
 // Solo estos servicios generales son editables desde la app
 soloEstos:['Corte','Viatico','Cierre 75/80','Cierre corto','Abrojo','Ojal','Boton','Packaging'] }
 };
+// ── CONFIG DE MARCAS ────────────────────────────────────────────────
+const MARCAS = {
+egomentali: { nombre:'Ego Mentali by PITUCOS', direccion:'Av Mitre 541 (Galería El Sol - Local 26) - Avellaneda', cuit:'23-17391839-9', tel:'11-7624-2172', email:'facturacion@egomentali.com.ar', logo:'logo-egomentali.jpg' },
+pitucos: { nombre:'Pitucos Uniformes', direccion:'Av Mitre 541 (Galería El Sol - Local 26) - Avellaneda', cuit:'23-17391839-9', tel:'11-7624-2172', email:'facturacion@egomentali.com.ar', logo:'logo-pitucos.png' },
+destrier: { nombre:'Destrier of Battle', direccion:'Av Mitre 541 (Galería El Sol - Local 26) - Avellaneda', cuit:'23-17391839-9', tel:'11-7624-2172', email:'facturacion@egomentali.com.ar', logo:'logo-destrier.jpg' }
+};
+const IVA_PCT = 0.21;
 // ── ESTADO ──────────────────────────────────────────────────────────
 let itemsActuales = [];
 let itemSeleccionado = null;
 let historial = [], updatedCount = 0;
 let itemCount = 0;
+let catalogo = [];
 // ── API (Apps Script) ───────────────────────────────────────────────
 async function apiGet(params) {
 const url = `${APP_CONFIG.apiUrl}?${new URLSearchParams(params).toString()}`;
@@ -460,6 +478,24 @@ cont.innerHTML = historial.map(h => `
 }
 // ── PRESUPUESTO ────────────────────────────────────────────────────────
 document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0];
+async function cargarNumPresupuesto() {
+try {
+const r = await apiGet({ action: 'presupuestoNum' });
+document.getElementById('pres-num').textContent = r.num;
+} catch (e) {
+document.getElementById('pres-num').textContent = '----';
+}
+}
+async function cargarCatalogo() {
+const sel = document.getElementById('quick-sel');
+try {
+catalogo = await apiGet({ action: 'catalogo' });
+sel.innerHTML = '<option value="">— Agregar prenda rápida —</option>' +
+catalogo.map(c => `<option value="${c.descripcion}|${c.precio}">${c.descripcion}</option>`).join('');
+} catch (e) {
+catalogo = [];
+}
+}
 function quickAdd() {
 const sel = document.getElementById('quick-sel');
 if (!sel.value) return;
@@ -482,13 +518,33 @@ div.innerHTML = `
 <div><label>Cant.</label><input type="number" value="${cant}" min="1" oninput="calcTots()"></div>
 <div><label>Precio</label><input type="number" value="${precio}" min="0" oninput="calcTots()" style="font-family:var(--mono)"></div>
 </div>
-<div class="item-total" id="${id}-tot">Total: $${(cant*precio).toLocaleString('es-AR')}</div>`;
+<div class="item-total" id="${id}-tot"><span>Total: $${(cant*precio).toLocaleString('es-AR')}</span><button type="button" class="item-savecat" onclick="guardarEnCatalogo('${id}')">⭐ Guardar en catálogo</button></div>`;
 wrap.appendChild(div);
 calcTots();
 }
 function delItem(id) {
 document.getElementById(id)?.remove();
 calcTots();
+}
+async function guardarEnCatalogo(id) {
+const row = document.getElementById(id);
+if (!row) return;
+const desc = row.querySelector('input[type=text]')?.value?.trim();
+const nums = row.querySelectorAll('input[type=number]');
+const precio = parseFloat(nums[1]?.value) || 0;
+if (!desc || !precio) { showToast('Completá descripción y precio antes de guardar', false); return; }
+const btn = row.querySelector('.item-savecat');
+btn.disabled = true; btn.textContent = '⏳ Guardando...';
+try {
+const resp = await apiPost({ action: 'agregarCatalogo', descripcion: desc, precio });
+if (resp.error) throw new Error(resp.error);
+showToast(`✓ "${desc}" guardado en el catálogo`);
+await cargarCatalogo();
+btn.textContent = '✓ En catálogo';
+} catch (err) {
+showToast('Error al guardar en catálogo: ' + err.message, false);
+btn.disabled = false; btn.textContent = '⭐ Guardar en catálogo';
+}
 }
 function calcTots() {
 let sub = 0;
@@ -498,19 +554,25 @@ if (nums.length >= 2) {
 const cant = parseFloat(nums[0].value) || 0;
 const precio = parseFloat(nums[1].value) || 0;
 const tot = cant * precio;
-const td = row.querySelector('.item-total');
+const td = row.querySelector('.item-total span');
 if (td) td.textContent = 'Total: $' + tot.toLocaleString('es-AR');
 sub += tot;
 }
 });
+const conIva = document.getElementById('pres-iva').value === 'si';
+const iva = conIva ? sub * IVA_PCT : 0;
+const total = sub + iva;
 document.getElementById('tot-sub').textContent = '$' + sub.toLocaleString('es-AR');
-document.getElementById('tot-grand').textContent = '$' + sub.toLocaleString('es-AR');
-return sub;
+document.getElementById('tot-iva').textContent = '$' + iva.toLocaleString('es-AR', {maximumFractionDigits:2});
+document.getElementById('tot-grand').textContent = '$' + total.toLocaleString('es-AR', {maximumFractionDigits:2});
+return { sub, iva, total };
 }
 function verPreview() {
 const rows = document.querySelectorAll('#items-wrap .item-row');
 if (!rows.length) { showToast('Agreá al menos un ítem', false); return; }
 const num = document.getElementById('pres-num').textContent;
+const marca = MARCAS[document.getElementById('pres-marca').value];
+const conIva = document.getElementById('pres-iva').value === 'si';
 const cliNombre = document.getElementById('cli-nombre').value || '—';
 const cliCuit = document.getElementById('cli-cuit').value || '—';
 const cliTel = document.getElementById('cli-tel').value || '—';
@@ -518,7 +580,7 @@ const cliEmail = document.getElementById('cli-email').value || '—';
 const fechaRaw = document.getElementById('pres-fecha').value;
 const fecha = fechaRaw ? new Date(fechaRaw+'T12:00:00').toLocaleDateString('es-AR',{day:"2-digit",month:"long",year:"numeric"}) : '—';
 const validez = document.getElementById('pres-validez').value;
-const sub = calcTots();
+const { sub, iva, total } = calcTots();
 let filas = '';
 rows.forEach(row => {
 const txt = row.querySelectorAll('input[type=text]');
@@ -532,28 +594,50 @@ filas += `<tr><td>${desc}</td><td>${talle}</td><td>${cant}</td><td>$${precio.toL
 });
 document.getElementById('pv-page').innerHTML = `
 <div class="pv-head">
-<div class="pv-emp"><strong>Ego Mentali by PITUCOS</strong>Av Mitre 541 (Galería El Sol - Local 26) - Avellaneda<br>CUIT-NIF: 23-17391839-9<br>Teléfono: 11-7624-2172<br>E-mail: facturacion@egomentali.com.ar</div>
+<div class="pv-emp"><img class="pv-logo" src="${marca.logo}" alt=""><strong>${marca.nombre}</strong>${marca.direccion}<br>CUIT-NIF: ${marca.cuit}<br>Teléfono: ${marca.tel}<br>E-mail: ${marca.email}</div>
 <div class="pv-num-box"><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px">Presupuesto</div><div class="pv-num-big">Nº ${num}</div><div class="pv-fecha">Fecha: ${fecha}</div><div class="pv-valid">⏱ Validez: ${validez}</div></div>
 </div>
 <div class="pv-cli">
 <div class="pv-cli-title">Datos del cliente</div>
 <div class="pv-cli-grid"><span>Nombre:</span><span>${cliNombre}</span><span>CUIT-NIF:</span><span>${cliCuit}</span><span>Teléfono:</span><span>${cliTel}</span><span>E-mail:</span><span>${cliEmail}</span></div>
 </div>
-<table class="pv-tbl"><thead><tr><th>Descripción</th><th>Talle</th><th>Unido?es</th><th>Precio</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table>
+<table class="pv-tbl"><thead><tr><th>Descripción</th><th>Talle</th><th>Unidades</th><th>Precio</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table>
 <div class="pv-tots"><div class="pv-tots-box">
 <div class="pv-tot-row"><span>Sub-Total</span><span class="val">$${sub.toLocaleString('es-AR')}</span></div>
-<div class="pv-tot-row"><span>IVA</span><span class="val">$0</span></div>
-<div class="pv-tot-row grand"><span>TOTAL PRESUPUESTADO</span><span class="val">$${sub.toLocaleString('es-AR')}</span></div>
+<div class="pv-tot-row"><span>IVA</span><span class="val">$${iva.toLocaleString('es-AR',{maximumFractionDigits:2})}</span></div>
+<div class="pv-tot-row grand"><span>TOTAL PRESUPUESTADO</span><span class="val">$${total.toLocaleString('es-AR',{maximumFractionDigits:2})}</span></div>
 </div></div>
-<div style="font-size:10px;color:#aaa;text-align:center;margin-top:12px;font-style:italic">PRECIOS SIN IVA</div>
+<div style="font-size:10px;color:#aaa;text-align:center;margin-top:12px;font-style:italic">${conIva ? 'PRECIOS CON IVA INCLUIDO (21%)' : 'PRECIOS SIN IVA'}</div>
 <div class="pv-firmas">
 <div class="pv-firma"><div class="pv-firma-line"></div>Firma de quien confecciona el presupuesto</div>
 <div class="pv-firma"><div class="pv-firma-line"></div>Firma de aceptación del cliente</div>
 </div>`;
 document.getElementById('pres-form-view').style.display = 'none';
 document.getElementById('pres-preview-view').style.display = 'block';
-const next = (parseInt(num)+1).toString().padStart(4,'0');
-document.getElementById('pres-num').textContent = next;
+}
+async function guardarPDF() {
+const num = document.getElementById('pres-num').textContent;
+try {
+const resp = await apiPost({ action: 'confirmarPresupuesto' });
+if (resp.error) throw new Error(resp.error);
+} catch (err) {
+showToast('No se pudo confirmar el número de presupuesto: ' + err.message, false);
+}
+window.print();
+nuevoPresupuesto();
+}
+function nuevoPresupuesto() {
+document.getElementById('cli-nombre').value = '';
+document.getElementById('cli-cuit').value = '';
+document.getElementById('cli-tel').value = '';
+document.getElementById('cli-email').value = '';
+document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0];
+document.getElementById('pres-validez').selectedIndex = 0;
+document.getElementById('items-wrap').innerHTML = '';
+itemCount = 0;
+calcTots();
+cargarNumPresupuesto();
+volverForm();
 }
 function volverForm() {
 document.getElementById('pres-form-view').style.display = 'block';
@@ -575,6 +659,8 @@ setTimeout(() => t.classList.remove('show'), 3500);
 }
 // Init
 cargarColegios();
+cargarNumPresupuesto();
+cargarCatalogo();
 </script>
 </body>
 </html>
