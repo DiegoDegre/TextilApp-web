@@ -28,7 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .sync-badge.online{color:var(--green);background:var(--green-dim);border:1px solid rgba(34,211,160,0.2)}
 .sync-badge.syncing{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,0.2)}
 .sync-badge.error{color:var(--red);background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2)}
-.nav{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
 .nav-btn{padding:12px 4px;border:none;background:transparent;color:var(--text3);font-size:11px;font-family:var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-bottom:2px solid transparent;transition:all 0.2s}
 .nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 .nav-btn span{font-size:20px}
@@ -152,6 +152,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <button class="nav-btn active" onclick="showPanel('precios',this)"><span>💰</span>Precios</button>
 <button class="nav-btn" onclick="showPanel('presupuesto',this)"><span>📄</span>Presupuesto</button>
 <button class="nav-btn" onclick="showPanel('historial',this)"><span>📊</span>Historial</button>
+<button class="nav-btn" onclick="showPanel('exportar',this)"><span>🖨️</span>Exportar</button>
 </div>
 <!-- PANEL: PRECIOS -->
 <div class="panel active" id="panel-precios">
@@ -289,6 +290,25 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 </div>
 </div>
 </div>
+<div class="panel" id="panel-exportar">
+<div class="container">
+<div class="section-label">Exportar lista para el local</div>
+<div class="card">
+<div class="card-header">
+<div class="card-icon">🖨️</div>
+<div><div class="card-title">Lista Mostrador</div><div class="card-desc">Descargá el PDF actualizado con los precios de hoy</div></div>
+</div>
+<div class="card-body">
+<label>Colegio</label>
+<select id="sel-colegio-export">
+<option value="">— Cargando colegios —</option>
+</select>
+<button class="btn btn-primary" onclick="exportarPDF()">🖨️ Exportar PDF</button>
+</div>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
@@ -303,7 +323,7 @@ itemLabel:(r)=> `${r.articulo} (${r.tecnica})`, priceField:'precio' },
 servicios: { label:'Servicios generales', porColegio:false, priceLabel:'Tarifa',
 itemLabel:(r)=> r.servicio, priceField:'tarifa',
 // Solo estos servicios generales son editables desde la app
-soloEstos:['Corte','Viatico','Cierre 75/80','Cierre corto','Abrojo','Ojal','Boton','Packaging'] }
+soloEstos:['Corte','Viatico','Cierre 75/80','Cierre corto','Abrojo','Ojal','Boton','Packaging','Elástico'] }
 };
 // ── CONFIG DE MARCAS ────────────────────────────────────────────────
 const MARCAS = {
@@ -347,6 +367,8 @@ try {
 const colegios = await apiGet({ action: 'colegios' });
 sel.innerHTML = '<option value="">— Seleccioná —</option>' +
 colegios.map(c => `<option value="${c}">${c}</option>`).join('');
+const selExp = document.getElementById('sel-colegio-export');
+if (selExp) selExp.innerHTML = '<option value="">— Seleccioná —</option>' + colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 setBadge('online', '● CONECTADO');
 } catch (e) {
 sel.innerHTML = '<option value="">Error al cargar</option>';
@@ -658,6 +680,26 @@ t.style.color = ok ? '#000' : '#fff';
 t.classList.add('show');
 setTimeout(() => t.classList.remove('show'), 3500);
 }
+// ── EXPORTAR PDF ──────────────────────────────────────────────────
+const MOSTRADOR = {
+'ENSPA': { id:'1MzjHfGX3tIj2v0QcO4UJKoxvkov7F9keGHiGRzbn1k4', gid:'1167197688' },
+'LORETO': { id:'1P07bFwVl2NuMwpOfzRqVG60rEScrJBJjbIkCH3k1vjg', gid:'2059050561' },
+'IMA': { id:'11B8eyAwyz68IvAbW0dVoxRl18hYnKbDkDb5aCNPgfMc', gid:'2059050561' },
+'PALAA': { id:'14bHpdROYpwE6f2WkwnKUbLL21jOQvfPnE2GeykfmThM', gid:'1167197688' },
+'PRENDAS LISAS': { id:'1Vs226idzWaqt0Phr2o7mHfEFMumOdaJw2zfQGlhav4U', gid:'2059050561' },
+'SARGA': { id:'165ociHUPo_Faslhx4ARGhG42BoNYM2ezx5gXIaXeKDk', gid:'2059050561' },
+'ISFD Nº101': { id:'1Yjzgdtk7xMljld8lftSxg2wtNp9gBfCz_8Sdysz7FH0', gid:'1167197688' }
+};
+
+function exportarPDF() {
+const colegio = document.getElementById('sel-colegio-export').value;
+if (!colegio) { showToast('Elegí un colegio primero', false); return; }
+const info = MOSTRADOR[colegio];
+if (!info) { showToast('No encontré la planilla de ese colegio', false); return; }
+const url = `https://docs.google.com/spreadsheets/d/${info.id}/export?format=pdf&gid=${info.gid}&size=A4&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=false&fzr=false`;
+window.open(url, '_blank');
+}
+
 // Init
 cargarColegios();
 cargarNumPresupuesto();
