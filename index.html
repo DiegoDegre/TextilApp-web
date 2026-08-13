@@ -290,6 +290,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 </div>
 </div>
 </div>
+<!-- PANEL: EXPORTAR -->
 <div class="panel" id="panel-exportar">
 <div class="container">
 <div class="section-label">Exportar lista para el local</div>
@@ -303,7 +304,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <select id="sel-colegio-export">
 <option value="">— Cargando colegios —</option>
 </select>
-<button class="btn btn-primary" onclick="exportarPDF()">🖨️ Exportar PDF</button>
+<button class="btn btn-primary" id="btn-exportar-pdf" onclick="exportarPDF()">🖨️ Exportar PDF</button>
 </div>
 </div>
 </div>
@@ -680,24 +681,36 @@ t.style.color = ok ? '#000' : '#fff';
 t.classList.add('show');
 setTimeout(() => t.classList.remove('show'), 3500);
 }
-// ── EXPORTAR PDF ──────────────────────────────────────────────────
-const MOSTRADOR = {
-'ENSPA': { id:'1MzjHfGX3tIj2v0QcO4UJKoxvkov7F9keGHiGRzbn1k4', gid:'1167197688' },
-'LORETO': { id:'1P07bFwVl2NuMwpOfzRqVG60rEScrJBJjbIkCH3k1vjg', gid:'2059050561' },
-'IMA': { id:'11B8eyAwyz68IvAbW0dVoxRl18hYnKbDkDb5aCNPgfMc', gid:'2059050561' },
-'PALAA': { id:'14bHpdROYpwE6f2WkwnKUbLL21jOQvfPnE2GeykfmThM', gid:'1167197688' },
-'PRENDAS LISAS': { id:'1Vs226idzWaqt0Phr2o7mHfEFMumOdaJw2zfQGlhav4U', gid:'2059050561' },
-'SARGA': { id:'165ociHUPo_Faslhx4ARGhG42BoNYM2ezx5gXIaXeKDk', gid:'2059050561' },
-'ISFD Nº101': { id:'1Yjzgdtk7xMljld8lftSxg2wtNp9gBfCz_8Sdysz7FH0', gid:'1167197688' }
-};
-
-function exportarPDF() {
+// ── EXPORTAR PDF (via Apps Script, sin necesidad de login de Google) ──
+async function exportarPDF() {
 const colegio = document.getElementById('sel-colegio-export').value;
 if (!colegio) { showToast('Elegí un colegio primero', false); return; }
-const info = MOSTRADOR[colegio];
-if (!info) { showToast('No encontré la planilla de ese colegio', false); return; }
-const url = `https://docs.google.com/spreadsheets/d/${info.id}/export?format=pdf&gid=${info.gid}&size=A4&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=false&fzr=false`;
-window.open(url, '_blank');
+const btn = document.getElementById('btn-exportar-pdf');
+const original = btn.textContent;
+btn.disabled = true;
+btn.textContent = '⏳ Generando...';
+try {
+const data = await apiGet({ action: 'mostradorPdf', colegio });
+if (data.error) { showToast('Error: ' + data.error, false); return; }
+const byteChars = atob(data.base64);
+const byteNums = new Array(byteChars.length);
+for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+const blobUrl = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = blobUrl;
+a.download = data.filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+showToast('PDF generado ✓');
+} catch (e) {
+showToast('No se pudo generar el PDF', false);
+} finally {
+btn.disabled = false;
+btn.textContent = original;
+}
 }
 
 // Init
