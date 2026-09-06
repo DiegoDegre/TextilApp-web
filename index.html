@@ -362,7 +362,8 @@ let itemCount = 0;
 let catalogo = [];
 // ── API (Apps Script) ───────────────────────────────────────────────
 async function apiGet(params) {
-const url = `${APP_CONFIG.apiUrl}?${new URLSearchParams(params).toString()}`;
+const p = Object.assign({}, params, { session: getSession() || '' });
+const url = `${APP_CONFIG.apiUrl}?${new URLSearchParams(p).toString()}`;
 const res = await fetch(url);
 return res.json();
 }
@@ -371,7 +372,7 @@ async function apiPost(body) {
 const res = await fetch(APP_CONFIG.apiUrl, {
 method: 'POST',
 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-body: JSON.stringify({ ...body, token: APP_CONFIG.token })
+body: JSON.stringify(Object.assign({}, body, { session: getSession() || '' }))
 });
 return res.json();
 }
@@ -735,19 +736,48 @@ btn.textContent = original;
 }
 
 // ── ACCESO (contraseña general, se pide cada vez que se abre la app) ──
-const LOCK_PASSWORD = 'admintextil';
-function checkPassword(e) {
+const LOCK_TTL = 8 * 60 * 60 * 1000; // 8 horas
+
+function getSession() {
+try {
+const raw = localStorage.getItem('ta_session');
+if (!raw) return null;
+const data = JSON.parse(raw);
+if (!data.token || !data.exp || Date.now() > data.exp) { localStorage.removeItem('ta_session'); return null; }
+return data.token;
+} catch (e) { return null; }
+}
+function setSession(token) {
+try { localStorage.setItem('ta_session', JSON.stringify({ token: token, exp: Date.now() + LOCK_TTL })); } catch (e) {}
+}
+async function checkPassword(e) {
 e.preventDefault();
 const input = document.getElementById('lock-input');
-if (input.value === LOCK_PASSWORD) {
+try {
+const resp = await apiPost({ action: 'login', password: input.value });
+if (resp.error) {
+const err = document.getElementById('lock-error');
+err.textContent = resp.error;
+err.style.display = 'block';
+input.focus();
+return;
+}
+setSession(resp.session);
+document.getElementById('lock-screen').style.display = 'none';
+cargarColegios();
+cargarNumPresupuesto();
+cargarCatalogo();
+} catch (err) {
+const errEl = document.getElementById('lock-error');
+errEl.textContent = 'No se pudo conectar. Proba de nuevo.';
+errEl.style.display = 'block';
+}
+}
+if (getSession()) {
 document.getElementById('lock-screen').style.display = 'none';
 } else {
-document.getElementById('lock-error').style.display = 'block';
-input.value = '';
-input.focus();
-}
-}
 document.getElementById('lock-input').focus();
+}
 // Init
 cargarColegios();
 cargarNumPresupuesto();
