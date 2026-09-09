@@ -328,6 +328,20 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <button class="btn btn-primary" id="btn-exportar-pdf" onclick="exportarPDF()">🖨️ Exportar PDF</button>
 </div>
 </div>
+<div class="card">
+<div class="card-header">
+<div class="card-icon">🔄</div>
+<div><div class="card-title">Sincronizar costos</div><div class="card-desc">Empuja el "Total Costo" de la Lista Mostrador a Gestión Moda</div></div>
+</div>
+<div class="card-body">
+<label>Colegio</label>
+<select id="sel-colegio-sync">
+<option value="">— Cargando colegios —</option>
+</select>
+<button class="btn btn-primary" id="btn-sync-gm" onclick="sincronizarGestionModa()">🔄 Sincronizar con Gestión Moda</button>
+<div id="sync-gm-result" style="margin-top:10px;font-size:12px;color:#666;white-space:pre-wrap"></div>
+</div>
+</div>
 </div>
 </div>
 
@@ -392,6 +406,8 @@ sel.innerHTML = '<option value="">— Seleccioná —</option>' +
 colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 const selExp = document.getElementById('sel-colegio-export');
 if (selExp) selExp.innerHTML = '<option value="">— Seleccioná —</option>' + colegios.map(c => `<option value="${c}">${c}</option>`).join('');
+const selSync = document.getElementById('sel-colegio-sync');
+if (selSync) selSync.innerHTML = '<option value="">— Seleccioná —</option>' + colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 setBadge('online', '● CONECTADO');
 } catch (e) {
 sel.innerHTML = '<option value="">Error al cargar</option>';
@@ -729,6 +745,32 @@ setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
 showToast('PDF generado ✓');
 } catch (e) {
 showToast('No se pudo generar el PDF', false);
+} finally {
+btn.disabled = false;
+btn.textContent = original;
+}
+}
+
+// ── SINCRONIZAR COSTOS CON GESTIÓN MODA ────────────────────────────────
+async function sincronizarGestionModa() {
+const colegio = document.getElementById('sel-colegio-sync').value;
+if (!colegio) { showToast('Elegí un colegio primero', false); return; }
+const btn = document.getElementById('btn-sync-gm');
+const resultEl = document.getElementById('sync-gm-result');
+const original = btn.textContent;
+btn.disabled = true;
+btn.textContent = '⏳ Sincronizando...';
+resultEl.textContent = '';
+try {
+const data = await apiPost({ action: 'syncGestionModa', colegio });
+if (data.error) { showToast('Error: ' + data.error, false); return; }
+let msg = `✓ ${data.actualizados} de ${data.total} actualizados`;
+if (data.sinMatch && data.sinMatch.length) msg += `\n⚠ ${data.sinMatch.length} sin match en Gestión Moda: ` + data.sinMatch.slice(0, 15).join(', ') + (data.sinMatch.length > 15 ? '…' : '');
+if (data.errores && data.errores.length) msg += `\n✗ ${data.errores.length} con error: ` + data.errores.slice(0, 5).map(e => e.codigo + ' (' + (e.status || e.detalle) + ')').join(', ');
+resultEl.textContent = msg;
+showToast((data.errores && data.errores.length) ? 'Sincronizado con errores' : 'Sincronizado ✓', !(data.errores && data.errores.length));
+} catch (e) {
+showToast('No se pudo sincronizar', false);
 } finally {
 btn.disabled = false;
 btn.textContent = original;
