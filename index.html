@@ -331,7 +331,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <div class="card">
 <div class="card-header">
 <div class="card-icon">🔄</div>
-<div><div class="card-title">Sincronizar costos</div><div class="card-desc">Empuja el "Total Costo" de la Lista Mostrador a Gestión Moda</div></div>
+<div><div class="card-title">Sincronizar precios</div><div class="card-desc">Empuja Precio de Lista y Precio Efectivo/Transferencia a Gestión Moda</div></div>
 </div>
 <div class="card-body">
 <label>Colegio</label>
@@ -766,6 +766,7 @@ const data = await apiPost({ action: 'syncGestionModa', colegio });
 if (data.error) { showToast('Error: ' + data.error, false); return; }
 let msg = `✓ ${data.actualizados} de ${data.total} actualizados`;
 if (data.sinMatch && data.sinMatch.length) msg += `\n⚠ ${data.sinMatch.length} sin match en Gestión Moda: ` + data.sinMatch.slice(0, 15).join(', ') + (data.sinMatch.length > 15 ? '…' : '');
+if (data.sinPrecioValido && data.sinPrecioValido.length) msg += `\n⚠ ${data.sinPrecioValido.length} sin precio válido en la planilla: ` + data.sinPrecioValido.slice(0, 15).join(', ') + (data.sinPrecioValido.length > 15 ? '…' : '');
 if (data.errores && data.errores.length) msg += `\n✗ ${data.errores.length} con error: ` + data.errores.slice(0, 5).map(e => e.codigo + ' (' + (e.status || e.detalle) + ')').join(', ');
 resultEl.textContent = msg;
 showToast((data.errores && data.errores.length) ? 'Sincronizado con errores' : 'Sincronizado ✓', !(data.errores && data.errores.length));
