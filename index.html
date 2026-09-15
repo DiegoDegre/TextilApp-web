@@ -154,7 +154,7 @@ tots-box{background:var(--surface2);border:1px solid var(--border);border-radius
 <div class="lock-sub">Ingresá la contraseña para continuar</div>
 <form onsubmit="checkPassword(event)">
 <input type="password" id="lock-input" placeholder="Contraseña" autocomplete="off" style="text-align:center">
-<button type="submit" class="btn btn-primary">Entrar</button>
+<button type="submit" id="lock-btn" class="btn btn-primary">Entrar</button>
 <div class="lock-error" id="lock-error">Contraseña incorrecta</div>
 </form>
 </div>
@@ -811,38 +811,45 @@ return data.token;
 function setSession(token) {
 try { localStorage.setItem('ta_session', JSON.stringify({ token: token, exp: Date.now() + LOCK_TTL })); } catch (e) {}
 }
+function iniciar() {
+cargarColegios();
+cargarNumPresupuesto();
+cargarCatalogo();
+}
 async function checkPassword(e) {
 e.preventDefault();
 const input = document.getElementById('lock-input');
+const btn = document.getElementById('lock-btn');
+const err = document.getElementById('lock-error');
+err.style.display = 'none';
+btn.disabled = true;
+btn.textContent = 'Entrando...';
 try {
 const resp = await apiPost({ action: 'login', password: input.value });
 if (resp.error) {
-const err = document.getElementById('lock-error');
 err.textContent = resp.error;
 err.style.display = 'block';
 input.focus();
+btn.disabled = false;
+btn.textContent = 'Entrar';
 return;
 }
 setSession(resp.session);
 document.getElementById('lock-screen').style.display = 'none';
-cargarColegios();
-cargarNumPresupuesto();
-cargarCatalogo();
-} catch (err) {
-const errEl = document.getElementById('lock-error');
-errEl.textContent = 'No se pudo conectar. Proba de nuevo.';
-errEl.style.display = 'block';
+iniciar();
+} catch (e2) {
+err.textContent = 'No se pudo conectar. Proba de nuevo.';
+err.style.display = 'block';
+btn.disabled = false;
+btn.textContent = 'Entrar';
 }
 }
 if (getSession()) {
 document.getElementById('lock-screen').style.display = 'none';
+iniciar();
 } else {
 document.getElementById('lock-input').focus();
 }
-// Init
-cargarColegios();
-cargarNumPresupuesto();
-cargarCatalogo();
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
