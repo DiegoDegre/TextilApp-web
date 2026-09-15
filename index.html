@@ -375,20 +375,38 @@ let historial = [], updatedCount = 0;
 let itemCount = 0;
 let catalogo = [];
 // ── API (Apps Script) ───────────────────────────────────────────────
+async function fetchWithRetry(url, opts, attempts) {
+attempts = attempts || 3;
+let lastErr;
+for (let i = 0; i < attempts; i++) {
+try {
+const res = await fetch(url, opts);
+const text = await res.text();
+try {
+return JSON.parse(text);
+} catch (e2) {
+lastErr = new Error('Respuesta invalida del servidor');
+}
+} catch (e) {
+lastErr = e;
+}
+if (i < attempts - 1) await new Promise(r => setTimeout(r, 600 * (i + 1)));
+}
+throw lastErr;
+}
 async function apiGet(params) {
 const p = Object.assign({}, params, { session: getSession() || '' });
 const url = `${APP_CONFIG.apiUrl}?${new URLSearchParams(p).toString()}`;
-const res = await fetch(url);
-return res.json();
+return fetchWithRetry(url, { method: 'GET' });
 }
 async function apiPost(body) {
 // text/plain evita el preflight CORS que Apps Script no maneja
-const res = await fetch(APP_CONFIG.apiUrl, {
+const payload = JSON.stringify(Object.assign({}, body, { session: getSession() || '' }));
+return fetchWithRetry(APP_CONFIG.apiUrl, {
 method: 'POST',
 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-body: JSON.stringify(Object.assign({}, body, { session: getSession() || '' }))
+body: payload
 });
-return res.json();
 }
 // ── NAV ──────────────────────────────────────────────────────────
 function showPanel(id, btn) {
