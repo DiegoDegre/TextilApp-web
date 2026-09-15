@@ -578,6 +578,7 @@ async function cargarCatalogo() {
   }
   try {
     const fresh = await apiGet({ action: 'catalogo' });
+    if (!Array.isArray(fresh)) throw new Error('Respuesta invalida del catalogo');
     catalogo = fresh;
     renderCatalogoSelect();
     localStorage.setItem('ta_catalogo_cache', JSON.stringify({ data: fresh, ts: Date.now() }));
