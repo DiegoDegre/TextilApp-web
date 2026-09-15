@@ -567,14 +567,28 @@ document.getElementById('pres-num').textContent = '----';
 }
 }
 async function cargarCatalogo() {
-const sel = document.getElementById('quick-sel');
-try {
-catalogo = await apiGet({ action: 'catalogo' });
-sel.innerHTML = '<option value="">— Agregar prenda rápida —</option>' +
-catalogo.map(c => `<option value="${c.descripcion}|${c.precio}">${c.descripcion}</option>`).join('');
-} catch (e) {
-catalogo = [];
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem('ta_catalogo_cache') || 'null'); } catch (e) { cached = null; }
+  if (cached && Array.isArray(cached.data) && cached.data.length) {
+    catalogo = cached.data;
+    renderCatalogoSelect();
+  } else {
+    const sel0 = document.getElementById('quick-sel');
+    if (sel0) sel0.innerHTML = '<option>Cargando materiales...</option>';
+  }
+  try {
+    const fresh = await apiGet({ action: 'catalogo' });
+    catalogo = fresh;
+    renderCatalogoSelect();
+    localStorage.setItem('ta_catalogo_cache', JSON.stringify({ data: fresh, ts: Date.now() }));
+  } catch (e) {
+    if (!cached) catalogo = [];
+  }
 }
+function renderCatalogoSelect() {
+  const sel = document.getElementById('quick-sel');
+  if (!sel) return;
+  sel.innerHTML = catalogo.map(c => `<option value='${c.descripcion}|${c.precio}'>${c.descripcion}</option>`).join('');
 }
 function quickAdd() {
 const sel = document.getElementById('quick-sel');
