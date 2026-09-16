@@ -416,10 +416,7 @@ document.getElementById('panel-'+id).classList.add('active');
 btn.classList.add('active');
 }
 // ── PRECIOS: carga inicial ────────────────────────────────────────────
-async function cargarColegios() {
-const sel = document.getElementById('sel-colegio');
-try {
-const colegios = await apiGet({ action: 'colegios' });
+function renderColegios(colegios, sel) {
 sel.innerHTML = '<option value="">— Seleccioná —</option>' +
 colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 const selExp = document.getElementById('sel-colegio-export');
@@ -427,8 +424,22 @@ if (selExp) selExp.innerHTML = '<option value="">— Seleccioná —</option>' +
 const selSync = document.getElementById('sel-colegio-sync');
 if (selSync) selSync.innerHTML = '<option value="">— Seleccioná —</option>' + colegios.map(c => `<option value="${c}">${c}</option>`).join('');
 setBadge('online', '● CONECTADO');
-} catch (e) {
+
+}
+async function cargarColegios() {
+const sel = document.getElementById('sel-colegio');
+let __colCached = null;
+try { __colCached = JSON.parse(localStorage.getItem('ta_colegios_cache') || 'null'); } catch (e) {}
+if (Array.isArray(__colCached)) { try { renderColegios(__colCached, sel); } catch (e) {} }
+try {
+const colegios = await apiGet({ action: 'colegios' });
+if (!Array.isArray(colegios)) throw new Error('Respuesta invalida de colegios');
+renderColegios(colegios, sel);
+try { localStorage.setItem('ta_colegios_cache', JSON.stringify(colegios)); } catch (e) {}} catch (e) {if (!__colCached) {
+
 sel.innerHTML = '<option value="">Error al cargar</option>';
+}
+
 setBadge('error', '● SIN CONEXIÓN');
 }
 }
@@ -451,17 +462,7 @@ document.getElementById('items-sec').style.display = 'none';
 document.getElementById('precio-sec').style.display = 'none';
 if (colegio) cargarItems(tabla, colegio);
 }
-async function cargarItems(tabla, colegio) {
-const cfg = TABLAS[tabla];
-const itemsSec = document.getElementById('items-sec');
-const list = document.getElementById('items-list');
-document.getElementById('items-label').textContent = cfg.label;
-list.innerHTML = '<div class="empty-state">Cargando…</div>';
-itemsSec.style.display = 'block';
-try {
-const params = { action: tabla };
-if (colegio) params.colegio = colegio;
-let rows = await apiGet(params);
+function renderItems(rows, cfg, list) {
 if (cfg.soloEstos) {
 rows = rows.filter(r => cfg.soloEstos.includes(r.servicio));
 }
@@ -477,8 +478,28 @@ list.innerHTML = rows.map((r, i) => `
 <span class="item-pick-name">${cfg.itemLabel(r)}</span>
 <span class="item-pick-price">$${Number(r[cfg.priceField]||0).toLocaleString('es-AR')}</span>
 </div>`).join('');
-} catch (e) {
+
+}
+async function cargarItems(tabla, colegio) {
+const cfg = TABLAS[tabla];
+const itemsSec = document.getElementById('items-sec');
+const list = document.getElementById('items-list');
+document.getElementById('items-label').textContent = cfg.label;
+list.innerHTML = '<div class="empty-state">Cargando…</div>';
+itemsSec.style.display = 'block';
+let __itemsCached = null;
+try { __itemsCached = JSON.parse(localStorage.getItem('ta_items_cache_' + tabla + '_' + (colegio || '')) || 'null'); } catch (e) {}
+if (Array.isArray(__itemsCached)) { try { renderItems(__itemsCached, cfg, list); } catch (e) {} }
+try {
+const params = { action: tabla };
+if (colegio) params.colegio = colegio;
+let rows = await apiGet(params);
+if (!Array.isArray(rows)) throw new Error('Respuesta invalida de items');
+renderItems(rows, cfg, list);
+try { localStorage.setItem('ta_items_cache_' + tabla + '_' + (colegio || ''), JSON.stringify(rows)); } catch (e) {}} catch (e) {if (!__itemsCached) {
+
 list.innerHTML = '<div class="empty-state">Error al cargar. Revisá la conexión.</div>';
+}
 setBadge('error', '● ERROR');
 }
 }
